@@ -175,19 +175,40 @@ def combined_workflow(
                 indv_periods = sp.calc_indv_period_workflow(acf_curve=indv_acfs, img_props=img_props_dict)
 
                 # Calculate the peak properties
-                indv_peak_widths, indv_peak_maxs, indv_peak_mins, indv_peak_offsets, indv_peak_props = sp.calc_indv_peak_props_workflow(bin_values=bin_values, img_props=img_props_dict)
+                peak_dict = sp.calc_indv_peak_props_workflow(bin_values=bin_values, img_props=img_props_dict)
+
+                # Unpack dictionary so it works with existing structure
+                indv_peak_widths = peak_dict["peak_widths"]
+                indv_peak_maxs = peak_dict["peak_maxs"]
+                indv_peak_mins = peak_dict["peak_mins"]
+                indv_peak_offsets = peak_dict["peak_offsets"]
+                indv_incr_rates = peak_dict["incr_rates"]
+                indv_dec_rates = peak_dict["dec_rates"]
+                indv_ddx_maxs = peak_dict["ddx_maxs"]
+                indv_ddx_mins = peak_dict["ddx_mins"]
+                indv_peak_props = peak_dict["peak_props"]
+
+                # Calculate the amplitude and relative amplitude
                 indv_peak_amps = indv_peak_maxs - indv_peak_mins
                 indv_peak_rel_amps = indv_peak_amps / indv_peak_mins
-                
+
                 # Calculate the individual CCFs and shifts
                 if img_props_dict['num_channels'] > 1:
                     indv_ccfs = sp.calc_indv_CCF_workflow(bin_values=bin_values, img_props=img_props_dict)
                     indv_shifts = sp.calc_indv_shift_workflow(indv_ccfs=indv_ccfs, indv_periods=indv_periods, img_props=img_props_dict)
 
                 # adjust the different waves properties to be the use the frame interval rather than the number of frames
-                indv_periods = indv_periods * img_props_dict['frame_interval']
-                indv_peak_offsets = indv_peak_offsets * img_props_dict['frame_interval']
-                indv_peak_widths = indv_peak_widths * img_props_dict['frame_interval']
+                indv_periods *= img_props_dict['frame_interval']
+                indv_peak_offsets *= img_props_dict['frame_interval']
+                indv_peak_widths *= img_props_dict['frame_interval']
+
+                indv_incr_rates /= img_props_dict['frame_interval']
+                indv_dec_rates /= img_props_dict['frame_interval']
+                indv_ddx_maxs /= img_props_dict['frame_interval']
+                indv_ddx_mins /= img_props_dict['frame_interval']
+
+                # Calculate ratio between the rate max and min
+                indv_ddx_ratios = -1 * (indv_ddx_maxs / indv_ddx_mins)
 
                 # create dictionary of image parameters and their values for later use
                 img_parameters_dict = {
@@ -198,6 +219,11 @@ def combined_workflow(
                                 'Peak Max': indv_peak_maxs,
                                 'Peak Min': indv_peak_mins,
                                 'Peak Offset': indv_peak_offsets,
+                                'Increasing Rate (left side)': indv_incr_rates,
+                                'Decreasing Rate (right side)': indv_dec_rates,
+                                'Max Increasing Rate': indv_ddx_maxs,
+                                'Max Decreasing Rate': indv_ddx_mins,
+                                'Max Incr Rate / Dec Rate': indv_ddx_ratios
                                 }    
                 
                 # add shifts to the dictionary if there are multiple channels

@@ -62,6 +62,8 @@ def return_indv_peak_prop_figure(
 	'''
 	# Extract peak properties from the dictionary
 	smoothed_signal = prop_dict['smoothed']
+	signal_ddx = prop_dict['derivativeCorrected']
+	avg_signal = prop_dict['averageSignal']
 	peaks = prop_dict['peaks']
 	proms = prop_dict['proms']
 	heights = prop_dict['heights']
@@ -75,10 +77,15 @@ def return_indv_peak_prop_figure(
 	ax.plot(x_axis, bin_signal, color = 'tab:gray', label = 'raw signal')
 	ax.plot(x_axis, smoothed_signal, color = 'tab:cyan', label = 'smoothed signal')
 
+	# Plot the derivative plot and the "zero line"
+	ax.plot(x_axis, signal_ddx, color = 'red', label = 'derivative', alpha = 0.3)
+	ax.axhline(y=avg_signal, color='blue', linestyle = '--', alpha = 0.5)
+
+
 	# Plot each peak width and amplitude
 	if not np.isnan(peaks).any():
 		for i in range(peaks.shape[0]):
-			# Plot the peal width
+			# Plot the peak width
 			ax.hlines(heights[i], 
 					leftIndex[i] * frame_interval, 
 					rightIndex[i] * frame_interval, 
